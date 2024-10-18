@@ -1,0 +1,39 @@
+services:
+  mono:
+    container_name: notion-press-mono
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    working_dir: /app
+    command: pnpm dev
+    ports:
+      - target: 3000
+        published: 3000
+    environment:
+      NOTION_TOKEN: ${NOTION_TOKEN}
+      NOTION_DATABASE_ID: ${NOTION_DATABASE_ID}
+      REDIS_URL: redis://default:${REDIS_PASSWORD:-Noti0nPr3ss}@redis:6379
+    depends_on:
+      - redis
+    volumes:
+      - ./:/app
+    networks:
+      - notion-press
+
+  redis:
+    container_name: notion-press-redis
+    image: redis
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-Noti0nPr3ss}
+    ports:
+      - target: 6379
+        published: 6379
+    networks:
+      - notion-press
+
+networks:
+  notion-press:
+    name: notion-press
+    driver: bridge
