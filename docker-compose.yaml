@@ -12,7 +12,6 @@ services:
         published: 3000
     environment:
       NOTION_TOKEN: ${NOTION_TOKEN}
-      NOTION_DATABASE_ID: ${NOTION_DATABASE_ID}
       REDIS_URL: redis://default:${REDIS_PASSWORD:-Noti0nPr3ss}@redis:6379
     depends_on:
       - redis
