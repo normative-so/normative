@@ -3,15 +3,14 @@ import notion from "../connections/notion.mjs";
 
 
 export const processDatabase = async (database_id: string) => {
-    const { results } = await notion.databases.query({
+    const { results: pages } = await notion.databases.query({
         database_id: database_id,
     });
 
-    for (const row of results) {
-        console.log(`Enqueuing row ${row.id}`);
-
-        await queue.add('processRow', {
-            rows: row,
-        });
-    }
+    await queue.addBulk(pages.map((page) => ({
+        name: 'processPage',
+        data: {
+            page: page,
+        },
+    })));
 }

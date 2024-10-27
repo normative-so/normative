@@ -7,12 +7,12 @@ const worker = new Worker('normative', async job => {
         case 'processDatabase':
             console.log('Processing database:', job.id);
             await processDatabase(job.data.databaseId);
+
             break;
 
-        case 'processRow':
-            console.log('Processing row:', job.id);
+        case 'processPage':
+            console.log('Processing page:', job.id);
             break;
-
         default:
 
             break;

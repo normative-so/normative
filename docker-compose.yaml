@@ -13,10 +13,27 @@ services:
     environment:
       NOTION_TOKEN: ${NOTION_TOKEN}
       REDIS_URL: redis://default:${REDIS_PASSWORD:-Noti0nPr3ss}@redis:6379
+      POSTGRES_URL: postgres://${POSTGRES_USER:-normative}:${POSTGRES_PASSWORD:-Noti0nPr3ss}@postgres:5432/${POSTGRES_DB:-normative}
     depends_on:
       - redis
     volumes:
       - ./:/app
+    networks:
+      - normative
+
+  postgres:
+    container_name: normative-postgres
+    restart: unless-stopped
+    image: postgres
+    ports:
+      - target: 5432
+        published: 6543
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-normative}
+      POSTGRES_USER: ${POSTGRES_USER:-normative}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-Noti0nPr3ss}
+    volumes:
+      - ./_DATA/pgdata:/var/lib/postgresql/data
     networks:
       - normative
 
@@ -28,7 +45,7 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-Noti0nPr3ss}
     ports:
       - target: 6379
-        published: 6379
+        published: 7480
     volumes:
       - ./_DATA/redis:/data
     networks:
