@@ -1,5 +1,6 @@
 import { Worker } from "bullmq";
 import { processDatabase } from "./processDatabase.mjs";
+import { processPage } from "./processPage.mjs";
 
 const worker = new Worker('normative', async job => {
 
@@ -12,9 +13,9 @@ const worker = new Worker('normative', async job => {
 
         case 'processPage':
             console.log('Processing page:', job.id);
+            await processPage(job.data.page);
             break;
         default:
-
             break;
     }
 

@@ -4,8 +4,8 @@ export async function up(db: Kysely<any>): Promise<void> {
     await db.schema
         .createTable('pages')
         .addColumn('database_id', 'text', (col) => col.notNull())
-        .addColumn('page_id', 'text', (col) => col.notNull())
-        .addColumn('body', 'jsonb', (col) => col.notNull())
+        .addColumn('page_id', 'text', (col) => col.primaryKey())
+        .addColumn('body', sql`jsonb[]`)
         .addColumn('created_by', 'text', (col) => col.notNull())
         .addColumn('updated_by', 'text', (col) => col.notNull())
         .addColumn('created_at', 'timestamp', (col) =>

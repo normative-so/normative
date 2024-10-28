@@ -1,14 +1,13 @@
 import { Kysely, sql } from 'kysely'
+import { DataTypeExpression } from 'kysely/dist/cjs/parser/data-type-parser'
 
 export async function up(db: Kysely<any>): Promise<void> {
     await db.schema
         .createTable('properties')
-        .addColumn('page_id', 'text', (col) => col.primaryKey())
+        .addColumn('page_id', 'text', (col) => col.notNull())
         .addColumn('field_id', 'text', (col) => col.notNull())
         .addColumn('type', 'text', (col) => col.notNull())
-        .addColumn('value', 'jsonb', (col) => col.notNull())
-        .addColumn('created_by', 'text', (col) => col.notNull())
-        .addColumn('updated_by', 'text', (col) => col.notNull())
+        .addColumn('value', sql`jsonb[]`, (col) => col.notNull())
         .addColumn('created_at', 'timestamp', (col) =>
             col.defaultTo(sql`now()`).notNull(),
         ).addColumn('updated_at', 'timestamp', (col) =>

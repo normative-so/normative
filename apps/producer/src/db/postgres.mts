@@ -1,10 +1,17 @@
-import { Database } from './types.mjs' // this is the Database interface we defined earlier
 import * as path from 'path'
-import { Pool } from 'pg'
+import pg from 'pg'
 import { promises as fs } from 'fs'
 import { FileMigrationProvider, Kysely, Migrator, PostgresDialect } from 'kysely'
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import { DB } from './types.mjs'
 
-export const db = new Kysely<Database>({
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const Pool = pg.Pool;
+
+export const db = new Kysely<DB>({
     dialect: new PostgresDialect({
         pool: new Pool({
             connectionString: process.env.POSTGRES_URL,
@@ -22,6 +29,9 @@ const migrator = new Migrator({
 })
 
 const { error, results } = await migrator.migrateToLatest()
+
+// console.log({ results });
+
 
 results?.forEach((it) => {
     if (it.status === 'Success') {
