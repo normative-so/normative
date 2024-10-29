@@ -11,12 +11,12 @@ export const processDatabase = async (database_id: string) => {
 
     const { results: pages } = await notion.databases.query({
         database_id: database_id,
-        // filter: {
-        //     timestamp: "last_edited_time",
-        //     last_edited_time: {
-        //         on_or_after: last_checked,
-        //     }
-        // }
+        filter: {
+            timestamp: "last_edited_time",
+            last_edited_time: {
+                on_or_after: last_checked,
+            }
+        }
     });
 
     const result = (pages as PageObjectResponse[]).flatMap(item =>
@@ -30,35 +30,19 @@ export const processDatabase = async (database_id: string) => {
         })
     );
 
-    await db.transaction().execute(async (trx) => {
-        trx
-            .deleteFrom('properties')
-            .where('page_id', 'in', pages.map((page) => page.id))
-            .execute();
+    if (result.length > 0) {
+        await db.transaction().execute(async (trx) => {
+            trx
+                .deleteFrom('properties')
+                .where('page_id', 'in', pages.map((page) => page.id))
+                .execute();
 
-        trx
-            .insertInto('properties')
-            .values(result)
-            .execute();
-
-        trx
-            .insertInto('pages')
-            .values((pages as PageObjectResponse[]).map((page) => {
-                return {
-                    database_id: database_id,
-                    page_id: page.id,
-                    created_by: page.created_by.id,
-                    updated_by: page.last_edited_by.id,
-                    created_at: page.created_time,
-                    updated_at: page.last_edited_time,
-                };
-            }))
-            .onConflict(oc => oc.column('page_id').doUpdateSet({
-                updated_by: (eb) => eb.ref('excluded.updated_by'),
-                updated_at: (eb) => eb.ref('excluded.updated_at'),
-            }))
-            .execute();
-    })
+            trx
+                .insertInto('properties')
+                .values(result)
+                .execute();
+        })
+    }
 
     await redis.set(`last_checked_${database_id}`, new Date().toISOString());
 
