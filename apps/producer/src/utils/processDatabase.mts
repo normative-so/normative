@@ -24,6 +24,7 @@ export const processDatabase = async (database_id: string) => {
                 return {
                     page_id: item.id,
                     field_id: value.id,
+                    field_name: key,
                     type: value.type,
                     value: Array.isArray((value as any)[value.type]) ? (value as any)[value.type] : [(value as any)[value.type]],
                 };

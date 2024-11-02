@@ -5,6 +5,7 @@ export async function up(db: Kysely<any>): Promise<void> {
         .createTable('properties')
         .addColumn('page_id', 'text', (col) => col.notNull())
         .addColumn('field_id', 'text', (col) => col.notNull())
+        .addColumn('field_name', 'text', (col) => col.notNull())
         .addColumn('type', 'text', (col) => col.notNull())
         .addColumn('value', sql`jsonb[]`, (col) => col.notNull())
         .addColumn('created_at', 'timestamp', (col) =>
