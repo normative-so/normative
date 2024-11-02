@@ -1,5 +1,4 @@
 import { Kysely, sql } from 'kysely'
-import { DataTypeExpression } from 'kysely/dist/cjs/parser/data-type-parser'
 
 export async function up(db: Kysely<any>): Promise<void> {
     await db.schema

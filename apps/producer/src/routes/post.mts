@@ -1,7 +1,6 @@
 import { Router } from "express";
+import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { db } from "../db/postgres.mjs";
-import { sql } from "kysely";
-import { jsonArrayFrom } from 'kysely/helpers/postgres'
 
 const router: Router = Router();
 
@@ -63,6 +62,7 @@ router.get("/:id", async (req, res) => {
                         .orderBy('properties.created_at', 'desc')
                 ).as('properties')
             ])
+            .where('page_id', '=', id)
             .execute();
 
         if (page.length === 0) {
