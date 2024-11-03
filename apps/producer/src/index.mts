@@ -11,7 +11,7 @@ const app = express();
 
 setInterval(async () => {
     await queue.add('processDatabaseList', {});
-}, 1000 * 60);
+}, 1000 * 10);
 
 app.use(express.json());
 

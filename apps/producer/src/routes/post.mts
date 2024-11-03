@@ -4,8 +4,10 @@ import { db } from "../db/postgres.mjs";
 
 const router: Router = Router();
 
-router.get("/", async (req, res) => {
+router.get("/:database", async (req, res) => {
     try {
+        const { database } = req.params;
+
         const pages = await db
             .selectFrom('pages')
             .select((eb) => [
@@ -21,18 +23,11 @@ router.get("/", async (req, res) => {
                         .orderBy('properties.created_at', 'desc')
                 ).as('properties')
             ])
+            .where((eb) => eb.or([
+                eb('database_id', '=', database),
+                eb('database_alias', '=', database)
+            ]))
             .execute();
-
-        // .innerJoin(
-        //     (eb) => eb
-        //         .selectFrom('properties')
-        //         .selectAll()
-        //         .where('field_id', '=', 'title')
-        //         .as('properties'),
-        //     (join) => join
-        //         .onRef('properties.page_id', '=', 'pages.page_id'),
-        // ).select(['pages.page_id', 'pages.created_at', 'pages.created_by', 'pages.updated_at', 'pages.updated_by', 'properties.value as title'])
-        // .where(sql`cardinality(properties.value::jsonb[])`, '>', 0)
 
         res.json(pages);
     } catch (error) {
@@ -42,9 +37,9 @@ router.get("/", async (req, res) => {
     }
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/:database/:page_id", async (req, res) => {
     try {
-        const { id } = req.params;
+        const { database, page_id } = req.params;
 
         const page = await db
             .selectFrom('pages')
@@ -62,7 +57,11 @@ router.get("/:id", async (req, res) => {
                         .orderBy('properties.created_at', 'desc')
                 ).as('properties')
             ])
-            .where('page_id', '=', id)
+            .where('page_id', '=', page_id)
+            .where((eb) => eb.or([
+                eb('database_id', '=', database),
+                eb('database_alias', '=', database)
+            ]))
             .execute();
 
         if (page.length === 0) {
