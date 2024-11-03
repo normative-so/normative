@@ -2,9 +2,10 @@
 import { BlockObjectResponse, PageObjectResponse, PartialBlockObjectResponse } from "@notionhq/client/build/src/api-endpoints";
 import notion from "../connections/notion.mjs";
 import { db } from "../db/postgres.mjs";
+import { NotionDatabase } from "../types.mjs";
 
 
-export const processPage = async (page: PageObjectResponse) => {
+export const processPage = async ({ page, database }: { page: PageObjectResponse, database: NotionDatabase }) => {
     try {
         const { results }: {
             results: (BlockObjectResponse | PartialBlockObjectResponse)[];
@@ -13,7 +14,8 @@ export const processPage = async (page: PageObjectResponse) => {
         });
 
         await db.insertInto('pages').values({
-            database_id: (page.parent as { database_id: string }).database_id,
+            database_id: database.id,
+            database_alias: database.alias,
             page_id: page.id,
             body: results,
             created_by: page.created_by.id,
@@ -26,6 +28,9 @@ export const processPage = async (page: PageObjectResponse) => {
             updated_at: (eb) => eb.ref('excluded.updated_at'),
         })).execute();
     } catch (error) {
-        console.error(error);
+        console.error({
+            location: 'processPage',
+            error,
+        });
     }
 }

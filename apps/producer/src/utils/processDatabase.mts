@@ -3,14 +3,15 @@ import queue from "../connections/bull.mjs";
 import notion from "../connections/notion.mjs";
 import redis from "../connections/redis.mjs";
 import { db } from "../db/postgres.mjs";
+import { NotionDatabase } from "../types.mjs";
 
 
-export const processDatabase = async (database_id: string) => {
+export const processDatabase = async (database: NotionDatabase) => {
     try {
-        const last_checked = await redis.get(`last_checked_${database_id}`) ?? new Date(0).toISOString();
+        const last_checked = await redis.get(`last_checked_${database.id}`) ?? new Date(0).toISOString();
 
         const { results: pages } = await notion.databases.query({
-            database_id: database_id,
+            database_id: database.id,
             filter: {
                 timestamp: "last_edited_time",
                 last_edited_time: {
@@ -45,15 +46,19 @@ export const processDatabase = async (database_id: string) => {
             })
         }
 
-        await redis.set(`last_checked_${database_id}`, new Date().toISOString());
+        await redis.set(`last_checked_${database.id}`, new Date().toISOString());
 
         await queue.addBulk(pages.map((page) => ({
             name: 'processPage',
             data: {
+                database: database,
                 page: page,
             },
         })));
     } catch (error) {
-        console.error(error);
+        console.error({
+            location: 'processDatabase',
+            error,
+        });
     }
 }

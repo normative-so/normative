@@ -5,6 +5,14 @@
 
 import type { ColumnType } from "kysely";
 
+export type ArrayType<T> = ArrayTypeImpl<T> extends (infer U)[]
+  ? U[]
+  : ArrayTypeImpl<T>;
+
+export type ArrayTypeImpl<T> = T extends ColumnType<infer S, infer I, infer U>
+  ? ColumnType<S[], I[], U[]>
+  : T[];
+
 export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
   ? ColumnType<S, I | undefined, U>
   : ColumnType<T, T | undefined, T>;
@@ -24,9 +32,10 @@ export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
 export interface Pages {
-  body: Json;
+  body: ArrayType<Json> | null;
   created_at: Generated<Timestamp>;
   created_by: string;
+  database_alias: string;
   database_id: string;
   page_id: string;
   updated_at: Generated<Timestamp>;
@@ -36,10 +45,11 @@ export interface Pages {
 export interface Properties {
   created_at: Generated<Timestamp>;
   field_id: string;
+  field_name: string;
   page_id: string;
   type: string;
   updated_at: Generated<Timestamp>;
-  value: Json;
+  value: ArrayType<Json>;
 }
 
 export interface DB {

@@ -4,6 +4,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     await db.schema
         .createTable('pages')
         .addColumn('database_id', 'text', (col) => col.notNull())
+        .addColumn('database_alias', 'text', (col) => col.notNull())
         .addColumn('page_id', 'text', (col) => col.primaryKey())
         .addColumn('body', sql`jsonb[]`)
         .addColumn('created_by', 'text', (col) => col.notNull())
@@ -19,6 +20,12 @@ export async function up(db: Kysely<any>): Promise<void> {
         .createIndex('database_id_index')
         .on('pages')
         .column('database_id')
+        .execute()
+
+    await db.schema
+        .createIndex('database_alias_index')
+        .on('pages')
+        .column('database_alias')
         .execute()
 
     await db.schema

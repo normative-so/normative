@@ -14,6 +14,7 @@ services:
       NOTION_TOKEN: ${NOTION_TOKEN}
       REDIS_URL: redis://default:${REDIS_PASSWORD:-Noti0nPr3ss}@redis:6379
       POSTGRES_URL: postgres://${POSTGRES_USER:-normative}:${POSTGRES_PASSWORD:-Noti0nPr3ss}@postgres:5432/${POSTGRES_DB:-normative}
+      DATABASE_LIST: ${DATABASE_LIST:-[]}
     depends_on:
       - redis
     volumes:

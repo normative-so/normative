@@ -1,6 +1,5 @@
 import queue from "./connections/bull.mjs";
 import { migrate } from "./db/migrator.mjs";
-import { databases } from "./utils/data.mjs";
 import "./utils/worker.mjs";
 import express from "express";
 import postRouter from "./routes/post.mjs";
@@ -9,17 +8,9 @@ await migrate();
 
 const app = express();
 
-const processDatabases = async () => {
-    await queue.addBulk(databases.map((database) => ({
-        name: 'processDatabase',
-        data: {
-            databaseId: database,
-        }
-    })));
-}
 
 setInterval(async () => {
-    await processDatabases();
+    await queue.add('processDatabaseList', {});
 }, 1000 * 60);
 
 app.use(express.json());
