@@ -3,15 +3,28 @@ import { BlockObjectResponse, PageObjectResponse, PartialBlockObjectResponse } f
 import notion from "../connections/notion.mjs";
 import { db } from "../db/postgres.mjs";
 import { NotionDatabase } from "../types.mjs";
+import queue from "../connections/bull.mjs";
 
 
 export const processPage = async ({ page, database }: { page: PageObjectResponse, database: NotionDatabase }) => {
     try {
         const { results }: {
-            results: (BlockObjectResponse | PartialBlockObjectResponse)[];
+            results: BlockObjectResponse[];
         } = await notion.blocks.children.list({
             block_id: page.id,
-        });
+        }) as { results: BlockObjectResponse[] };
+
+        const blocksWithChildren = results.filter((block) => block.has_children);
+
+        // console.log(JSON.stringify(blocksWithChildren, null, 2));
+
+        await queue.addBulk(blocksWithChildren.map((block) => ({
+            name: 'processNestedBlock',
+            data: {
+                page_id: page.id,
+                block,
+            },
+        })));
 
         await db.insertInto('pages').values({
             database_id: database.id,
