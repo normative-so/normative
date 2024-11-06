@@ -1,30 +1,24 @@
 import { Worker } from "bullmq";
 import { processDatabase } from "./processDatabase.mjs";
-import { processPage } from "./processPage.mjs";
 import { processDatabaseList } from "./processDatabaseList.mjs";
-import { processNestedBlock } from "./processNestedBlock.mjs";
+import { processPage } from "./processPage.mjs";
 
 const worker = new Worker('normative', async job => {
 
     switch (job.name) {
         case 'processDatabaseList':
-            // console.log('Processing database list');
+            console.log('Processing database list');
             await processDatabaseList();
             break;
 
         case 'processDatabase':
-            // console.log('Processing database:', job.data.id);
+            console.log('Processing database:', job.data.id);
             await processDatabase(job.data);
             break;
 
         case 'processPage':
-            // console.log('Processing page:', job.data.page.id);
+            console.log('Processing page:', job.data.page.id);
             await processPage(job.data);
-            break;
-
-        case 'processNestedBlock':
-            console.log('Processing nested block:', job.data.block.id);
-            await processNestedBlock(job.data);
             break;
 
         default:

@@ -4,6 +4,7 @@ import notion from "../connections/notion.mjs";
 import { db } from "../db/postgres.mjs";
 import { NotionDatabase } from "../types.mjs";
 import queue from "../connections/bull.mjs";
+import { getNestedBlocks } from "./getNestedBlocks.mjs";
 
 
 export const processPage = async ({ page, database }: { page: PageObjectResponse, database: NotionDatabase }) => {
@@ -14,23 +15,23 @@ export const processPage = async ({ page, database }: { page: PageObjectResponse
             block_id: page.id,
         }) as { results: BlockObjectResponse[] };
 
-        const blocksWithChildren = results.filter((block) => block.has_children);
+        const blocksWithChildren = await Promise.all(results.map(async (block) => {
+            if (block.has_children) {
+                const children = await getNestedBlocks(block.id);
+                return {
+                    ...block,
+                    children,
+                }
+            }
 
-        // console.log(JSON.stringify(blocksWithChildren, null, 2));
-
-        await queue.addBulk(blocksWithChildren.map((block) => ({
-            name: 'processNestedBlock',
-            data: {
-                page_id: page.id,
-                block,
-            },
-        })));
+            return block;
+        }))
 
         await db.insertInto('pages').values({
             database_id: database.id,
             database_alias: database.alias,
             page_id: page.id,
-            body: results,
+            body: blocksWithChildren,
             created_by: page.created_by.id,
             updated_by: page.last_edited_by.id,
             created_at: page.created_time,

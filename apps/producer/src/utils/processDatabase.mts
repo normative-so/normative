@@ -12,12 +12,12 @@ export const processDatabase = async (database: NotionDatabase) => {
 
         const { results: pages } = await notion.databases.query({
             database_id: database.id,
-            // filter: {
-            //     timestamp: "last_edited_time",
-            //     last_edited_time: {
-            //         on_or_after: last_checked,
-            //     }
-            // }
+            filter: {
+                timestamp: "last_edited_time",
+                last_edited_time: {
+                    on_or_after: last_checked,
+                }
+            }
         });
 
         const result = (pages as PageObjectResponse[]).flatMap(item =>
