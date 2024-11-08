@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { db } from "../db/postgres.mjs";
+import { buildNestedBlocks } from "./helpers/buildNestedBlocks.mjs";
+import { Blocks } from "../db/types.mjs";
 
 const router: Router = Router();
 
@@ -10,22 +12,22 @@ router.get("/:database", async (req, res) => {
 
         const pages = await db
             .selectFrom('pages')
-            .select((eb) => [
+            .select((qb) => [
                 'page_id',
                 'created_at',
                 'created_by',
                 'updated_at',
                 'updated_by',
                 jsonArrayFrom(
-                    eb.selectFrom('properties')
+                    qb.selectFrom('properties')
                         .selectAll()
                         .whereRef('properties.page_id', '=', 'pages.page_id')
                         .orderBy('properties.created_at', 'desc')
                 ).as('properties')
             ])
-            .where((eb) => eb.or([
-                eb('database_id', '=', database),
-                eb('database_alias', '=', database)
+            .where((qb) => qb.or([
+                qb('database_id', '=', database),
+                qb('database_alias', '=', database)
             ]))
             .execute();
 
@@ -41,32 +43,40 @@ router.get("/:database/:page_id", async (req, res) => {
     try {
         const { database, page_id } = req.params;
 
+        const blocks = (await db
+            .selectFrom('blocks')
+            .selectAll()
+            .where('page_id', '=', page_id)
+            .execute()) as unknown as Blocks[];
+
+        const nestedBlocks = buildNestedBlocks(blocks);
+
         const page = await db
             .selectFrom('pages')
-            .select((eb) => [
+            .select((qb) => [
                 'page_id',
                 'created_at',
                 'created_by',
                 'updated_at',
                 'updated_by',
                 jsonArrayFrom(
-                    eb.selectFrom('properties')
+                    qb.selectFrom('properties')
                         .selectAll()
-                        .whereRef('properties.page_id', '=', 'pages.page_id')
+                        .where('properties.page_id', '=', page_id)
                         .orderBy('properties.created_at', 'desc')
                 ).as('properties')
             ])
             .where('page_id', '=', page_id)
-            .where((eb) => eb.or([
-                eb('database_id', '=', database),
-                eb('database_alias', '=', database)
+            .where((qb) => qb.or([
+                qb('database_id', '=', database),
+                qb('database_alias', '=', database)
             ]))
             .execute();
 
         if (page.length === 0) {
             res.status(404).json({ message: "Page not found" });
         } else {
-            res.json(page[0]);
+            res.json({ ...page[0], body: nestedBlocks });
         }
     } catch (error) {
         console.error(error);
