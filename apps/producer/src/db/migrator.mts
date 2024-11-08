@@ -18,6 +18,8 @@ export const migrate = async () => {
         })
     })
 
+    // const { error, results } = await migrator.migrateDown();
+
     const { error, results } = await migrator.migrateToLatest()
 
     // console.log({ results });
@@ -36,4 +38,5 @@ export const migrate = async () => {
         console.error(error)
         process.exit(1)
     }
+    //
 }

@@ -45,7 +45,6 @@ router.get("/:database/:page_id", async (req, res) => {
             .selectFrom('pages')
             .select((eb) => [
                 'page_id',
-                'body',
                 'created_at',
                 'created_by',
                 'updated_at',

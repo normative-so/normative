@@ -2,6 +2,7 @@ import { Worker } from "bullmq";
 import { processDatabase } from "./processDatabase.mjs";
 import { processDatabaseList } from "./processDatabaseList.mjs";
 import { processPage } from "./processPage.mjs";
+import { processNestedBlocks } from "./processNestedBlocks.mjs";
 
 const worker = new Worker('normative', async job => {
 
@@ -19,6 +20,11 @@ const worker = new Worker('normative', async job => {
         case 'processPage':
             console.log('Processing page:', job.data.page.id);
             await processPage(job.data);
+            break;
+
+        case 'processNestedBlock':
+            console.log('Processing nested block:', job.data);
+            await processNestedBlocks(job.data);
             break;
 
         default:

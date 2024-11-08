@@ -6,7 +6,6 @@ export async function up(db: Kysely<any>): Promise<void> {
         .addColumn('database_id', 'text', (col) => col.notNull())
         .addColumn('database_alias', 'text', (col) => col.notNull())
         .addColumn('page_id', 'text', (col) => col.primaryKey())
-        .addColumn('body', sql`jsonb[]`)
         .addColumn('created_by', 'text', (col) => col.notNull())
         .addColumn('updated_by', 'text', (col) => col.notNull())
         .addColumn('created_at', 'timestamp', (col) =>
@@ -27,14 +26,8 @@ export async function up(db: Kysely<any>): Promise<void> {
         .on('pages')
         .column('database_alias')
         .execute()
-
-    await db.schema
-        .createIndex('page_id_index')
-        .on('pages')
-        .column('page_id')
-        .execute()
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
-    await db.schema.dropTable('person').execute()
+    await db.schema.dropTable('pages').execute()
 }

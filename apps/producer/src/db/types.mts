@@ -31,8 +31,19 @@ export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
+export interface Blocks {
+  block_id: string;
+  content: Json;
+  created_at: Generated<Timestamp>;
+  created_by: string;
+  page_id: string;
+  parent_id: string | null;
+  type: string;
+  updated_at: Generated<Timestamp>;
+  updated_by: string;
+}
+
 export interface Pages {
-  body: ArrayType<Json> | null;
   created_at: Generated<Timestamp>;
   created_by: string;
   database_alias: string;
@@ -53,6 +64,7 @@ export interface Properties {
 }
 
 export interface DB {
+  blocks: Blocks;
   pages: Pages;
   properties: Properties;
 }

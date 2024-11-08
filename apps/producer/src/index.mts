@@ -1,13 +1,12 @@
-import queue from "./connections/bull.mjs";
-import { migrate } from "./db/migrator.mjs";
-import "./utils/worker.mjs";
 import express from "express";
+import "./utils/worker.mjs";
+import { migrate } from "./db/migrator.mjs";
 import postRouter from "./routes/post.mjs";
+import queue from "./connections/bull.mjs";
 
 await migrate();
 
 const app = express();
-
 
 setInterval(async () => {
     await queue.add('processDatabaseList', {});
