@@ -1,17 +1,19 @@
 import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
-import queue from "../connections/bull.mjs";
+import { Job } from "bullmq";
 import notion from "../connections/notion.mjs";
 import redis from "../connections/redis.mjs";
 import { db } from "../db/postgres.mjs";
+import pagesQueue from "../queues/pagesQueue.mjs";
 import { NotionDatabase } from "../types.mjs";
 
-
-export const processDatabase = async (database: NotionDatabase) => {
+export const processDatabase = async (job: Job<NotionDatabase>) => {
     try {
-        const last_checked = await redis.get(`last_checked_${database.id}`) ?? new Date(0).toISOString();
+        console.log('Processing database:', job.data.id);
+
+        const last_checked = await redis.get(`last_checked_${job.data.id}`) ?? new Date(0).toISOString();
 
         const { results: pages } = await notion.databases.query({
-            database_id: database.id,
+            database_id: job.data.id,
             filter: {
                 timestamp: "last_edited_time",
                 last_edited_time: {
@@ -46,15 +48,17 @@ export const processDatabase = async (database: NotionDatabase) => {
             })
         }
 
-        await redis.set(`last_checked_${database.id}`, new Date().toISOString());
+        await redis.set(`last_checked_${job.data.id}`, new Date().toISOString());
 
-        await queue.addBulk(pages.map((page) => ({
+        await pagesQueue.addBulk(pages.map((page) => ({
             name: 'processPage',
             data: {
-                database: database,
+                database: job.data,
                 page: page,
             },
         })));
+
+        await job.updateProgress(100);
     } catch (error) {
         console.error({
             location: 'processDatabase',

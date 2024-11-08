@@ -1,18 +1,11 @@
 import express from "express";
-import "./utils/worker.mjs";
-import { migrate } from "./db/migrator.mjs";
 import postRouter from "./routes/post.mjs";
-import queue from "./connections/bull.mjs";
-
-await migrate();
+import { initializeApp } from "./initializers/index.mjs";
 
 const app = express();
-
-setInterval(async () => {
-    await queue.add('processDatabaseList', {});
-}, 1000 * 10);
-
 app.use(express.json());
+
+initializeApp();
 
 app.use('/post', postRouter);
 

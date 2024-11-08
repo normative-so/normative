@@ -1,22 +1,24 @@
 import { BlockObjectResponse } from "@notionhq/client/build/src/api-endpoints";
+import { Job } from "bullmq";
 import notion from "../connections/notion.mjs";
-import queue from "../connections/bull.mjs";
 import { db } from "../db/postgres.mjs";
+import nestedBlockQueue from "../queues/nestedBlockQueue.mjs";
+import { NotionBlock } from "../types.mjs";
 
-export const processNestedBlocks = async ({ page_id, block_id }: { page_id: string, block_id: string }) => {
-    console.log({ page_id, block_id });
-
+export const processNestedBlocks = async (job: Job<NotionBlock>) => {
     try {
+        console.log('Processing nested blocks:', job.data.block_id);
+
         const { results } = await notion.blocks.children.list({
-            block_id,
+            block_id: job.data.block_id,
         }) as { results: BlockObjectResponse[] };
 
         const children = results.filter(child => child.has_children).map((child) => child.id);
 
-        await queue.addBulk(children.map((child_id) => ({
+        await nestedBlockQueue.addBulk(children.map((child_id) => ({
             name: 'processNestedBlock',
             data: {
-                page_id,
+                page_id: job.data.page_id,
                 block_id: child_id,
             },
         })));
@@ -24,8 +26,8 @@ export const processNestedBlocks = async ({ page_id, block_id }: { page_id: stri
 
         await db.insertInto('blocks').values(results.map((child) => ({
             block_id: child.id,
-            page_id: page_id,
-            parent_id: block_id,
+            page_id: job.data.page_id,
+            parent_id: job.data.block_id,
             type: child.type,
             created_by: child.created_by.id,
             content: child[child.type as keyof BlockObjectResponse],
