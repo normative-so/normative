@@ -1,5 +1,5 @@
 import { Router } from "express";
-import postRouter from './post.mjs';
+import postRouter from './postRoute.mjs';
 import bullBoardRouter from './bullBoardRoute.mjs';
 
 const router: Router = Router();
