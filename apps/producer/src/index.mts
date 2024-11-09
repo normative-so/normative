@@ -10,7 +10,12 @@ await initializeApp();
 app.use(routes);
 
 app.get("/", (req, res) => {
-    res.send("Doing science");
+    res.json({
+        hostname: req.hostname,
+        message: 'Doing science',
+        unix: Date.now(),
+        time: new Date().toISOString(),
+    });
 });
 
 app.listen(3000, () => {
